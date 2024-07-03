@@ -47,6 +47,7 @@ public class problema3{
                         lock.unlock();
                     }
                 }
+                ocupacao.release();
             }
         }
     }
@@ -94,6 +95,7 @@ public class problema3{
 
         Clientes thomaz = new Clientes(pega_barbeiro, "Thomaz");
         Thread thomaz_thread = new Thread(thomaz);
+        Thread.sleep(0);
         thomaz_thread.start();
 
         Clientes welton = new Clientes(pega_barbeiro, "welton");
