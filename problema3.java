@@ -2,7 +2,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Main {
+public class problema3{
     public static class Barbearia{
         private boolean dormindo;
         private final Semaphore ocupacao = new Semaphore(10);
