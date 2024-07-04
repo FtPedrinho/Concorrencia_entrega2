@@ -2,105 +2,93 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class problema3{
-    public static class Barbearia{
+public class Main {
+    public static class Barbearia {
         private boolean dormindo;
-        private final Semaphore ocupacao = new Semaphore(10);
-        private int cadeiras;
+        private static final Semaphore espera = new Semaphore(12);
+        private static final Semaphore assento = new Semaphore(1);
+        private int pessoas;
         private final Lock lock = new ReentrantLock();
 
 
-        public Barbearia(){
+        public Barbearia() {
             this.dormindo = true;
-            this.cadeiras = 5;
+            this.pessoas = 0;
         }
-        public void cortarCabelo(String nome) throws InterruptedException{
-            boolean espaco = ocupacao.tryAcquire();
-            if (!espaco){
-                Thread.sleep(1000);
-                System.out.println(nome + " não entrou na barbearia porque estava cheio.");
-            }else{
-                ocupacao.acquire();
-                lock.lock();
-                try{
-                    cadeiras--;
-                    System.out.println("O cliente " + nome + " entrou na barbearia.");
-                    if (dormindo){
-                        System.out.println("... O barbeiro foi acordado pelo cliente " + nome + " ...");
-                        dormindo = false;
-                    }
-                    if (cadeiras == 0){
-                        System.out.println("... Barbearia cheia ...");
-                    }
-                }finally{
-                    lock.unlock();
-                    Thread.sleep(1000);
+
+        public void cortarCabelo(String nome, int numero) throws InterruptedException {
+            if (!espera.tryAcquire()) {
+                Thread.sleep(500);
+                System.out.println(nome + numero + ": foi embora porque estava cheio.");
+            } else {
+                try {
+                    espera.acquire();
                     lock.lock();
-                    try{
-                        cadeiras ++;
-                        System.out.println(nome + " saiu da barbearia após do corte.");
-                        if (cadeiras == 5){
-                            dormindo = true;
-                            System.out.println("... O barbeiro voltou a dormir ...");
+                    try {
+                        if (pessoas != 0) {
+                            Thread.sleep(0);
+                            System.out.println(nome + numero + ": está na fila de espera na posição - " + pessoas);
+                            pessoas++;
+                            if (pessoas == 6) {
+                                System.out.println("... Barbearia cheia ...");
+                            }
+                        } else {
+                            pessoas++;
+                            System.out.println("... " + nome + numero + " acordou o barbeiro ...");
                         }
                     }finally{
                         lock.unlock();
                     }
+                    assento.acquire();
+                    System.out.println("Chegou a vez de " + nome + numero + " cortar o cabelo.");
+                    Thread.sleep(1000);
+                    System.out.println(nome + numero + ": Saiu da barbearia.");
+                    assento.release();
+                    pessoas--;
+                    if (pessoas == 0) {
+                        dormindo = true;
+                        System.out.println("... Barbeiro voltou a dormir ...");
+                    }
+                    espera.release();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                ocupacao.release();
             }
         }
     }
 
-    public static class Clientes implements Runnable{
+    public static class Clientes implements Runnable {
         private Barbearia barbearia;
         private String nome;
+        private int numero;
 
-        public Clientes(Barbearia barbearia, String nome){
+        public Clientes(Barbearia barbearia, String nome, int numero) {
             this.nome = nome;
             this.barbearia = barbearia;
+            this.numero = numero;
         }
 
-        public void run(){
-            try{
-                barbearia.cortarCabelo(nome);
-            }catch(InterruptedException e){
+        public void run() {
+            try {
+                barbearia.cortarCabelo(nome, numero);
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    public static void main(String[] args) throws InterruptedException{
+    public static void main(String[] args) throws InterruptedException {
         Barbearia pega_barbeiro = new Barbearia();
 
-        Clientes joao = new Clientes(pega_barbeiro, "Joao");
-        Thread joao_thread = new Thread(joao);
-        joao_thread.start();
-
-        Clientes maria = new Clientes(pega_barbeiro, "Maria");
-        Thread maria_thread = new Thread(maria);
-        maria_thread.start();
-
-        Clientes pedro = new Clientes(pega_barbeiro, "Pedro");
-        Thread pedro_thread = new Thread(pedro);
-        pedro_thread.start();
-
-        Clientes luana = new Clientes(pega_barbeiro, "Luana");
-        Thread luana_thread = new Thread(luana);
-        luana_thread.start();
-
-        Clientes juliana = new Clientes(pega_barbeiro, "Juliana");
-        Thread juliana_thread = new Thread(juliana);
-        juliana_thread.start();
-
-        Clientes thomaz = new Clientes(pega_barbeiro, "Thomaz");
-        Thread thomaz_thread = new Thread(thomaz);
-        Thread.sleep(0);
-        thomaz_thread.start();
-
-        Clientes welton = new Clientes(pega_barbeiro, "welton");
-        Thread welton_thread = new Thread(welton);
-        welton_thread.start();
-
+        for (int i = 0; i < 10; i++) {
+            Clientes cliente = new Clientes(pega_barbeiro, "Cliente", i + 1);
+            Thread cliente_thread = new Thread(cliente);
+            cliente_thread.start();
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
