@@ -81,16 +81,14 @@ public class Main {
         Barbearia barbearia = new Barbearia();
 
         // Criando os clientes da barbearia (10 clientes a cada 15 segs).
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 100; i++) {
             Cliente cliente = new Cliente(barbearia, "Cliente", i + 1);
             Thread clienteThread = new Thread(cliente);
             clienteThread.start();
-            if(i==10 || i ==20) {
-                try {
-                    Thread.sleep(15000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
