@@ -20,7 +20,7 @@ public class Main {
 
             // Verificar se a barbearia está lotada.
             if (!filaEspera.tryAcquire()) {
-                Thread.sleep(1000);
+                Thread.sleep(500);
                 System.out.println(nome + numero + ": foi embora porque estava cheio.");
                 return;
             }
